@@ -44,6 +44,7 @@ Show Task List Options Menu
 (2) Show Tasks list by date
 (3) Show Tasks list by project
 (4) Return Back to ToDoList Main Menu
+(5) Check Duplicate (future feature)
 
 Task Edit Options Menu
 -----------------------------
