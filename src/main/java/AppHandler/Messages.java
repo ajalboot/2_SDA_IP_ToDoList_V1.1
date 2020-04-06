@@ -28,9 +28,9 @@ public enum Messages {
 	INFOSHOWTSKBYDAT("\nShow Tasks List by Duedate.\n"), 
 	INFOSHOWTSKBYPRC("\nShow Tasks List by Project Name.\n"),
 	INFOSAVEANDQUIT("Save and Quit, Bye !\n"),
-	PRINTFILEHEADERS("Task" + TxtFileHandler.colDel + "Project" + TxtFileHandler.colDel + "DueDate"
+	PRINTFILEHEADERS("Task" + TxtFileHandler.colDel + "Project" + TxtFileHandler.colDel + "DueDate  "
 			+ TxtFileHandler.colDel + "Status" + "\n" + "====" + TxtFileHandler.colDel + "======="
-			+ TxtFileHandler.colDel + "=======" + TxtFileHandler.colDel + "======"),
+			+ TxtFileHandler.colDel + "=======   " + TxtFileHandler.colDel + "======"),
 	INFOUNKNOWNMESG("");
 
 	private String msg;

@@ -1,7 +1,6 @@
 
 package AppHandler;
 
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -21,13 +20,9 @@ public class TxtFileHandler {
 
 	// Define Variables to save required data for the origin file
 	static String fileName = "./bin/ToDoList.txt";
-	static File file = new File(fileName);
-	static Path filePath = Paths.get(fileName);
 
 	// Define Variables to save required data for the temporary files
 	static String tmpFileName = "./bin/.ToDoList.tmp";
-	static File tmpFile = new File(tmpFileName);
-	static Path tmpFilePath = Paths.get(tmpFileName);
 
 	// Define a variable for columns delimiter
 	public static String colDel = "\t\t\t";
@@ -45,8 +40,11 @@ public class TxtFileHandler {
 	 */
 	static void dataWriter(String inTask, String inProject, String inDueDate, String inStatus) {
 
+		File file = new File(fileName);
+		Path filePath = Paths.get(fileName);
+
 		StandardOpenOption standardOpenOption = StandardOpenOption.APPEND;
-		
+
 		if (!file.exists())
 			standardOpenOption = StandardOpenOption.CREATE;
 
@@ -59,7 +57,7 @@ public class TxtFileHandler {
 			dataWriter.close();
 
 		} catch (IOException e) {
-			//if unable to edit the todolist file,it throws an error and exits immediately
+			// if unable to edit the todolist file,it throws an error and exits immediately
 			e.printStackTrace();
 			System.exit(0);
 		}
@@ -78,18 +76,26 @@ public class TxtFileHandler {
 	 * @param conditionParam Data filter condition
 	 * @param infilePath     Input file path that application will read it
 	 */
-	static void dataReader(int keyParam, String conditionParam, Path infilePath) {
-		int readerCounter = 0;
+	@SuppressWarnings("unchecked")
+	static void dataReader(int keyParam, String conditionParam, String infilename) {
 
-		if (infilePath == null)
-			infilePath = filePath;
+		Path filePath = null;
+
+		if (infilename == null) {
+			filePath = Paths.get(fileName);
+		} else {
+			filePath = Paths.get(infilename);
+		}
 
 		outTaskList.clear();
 
-		try (BufferedReader datareader = Files.newBufferedReader(infilePath)) {
+		try (BufferedReader datareader = Files.newBufferedReader(filePath)) {
 			while ((dataLine = datareader.readLine()) != null) {
 				String[] dataField = dataLine.split(colDel);
-				outTaskList.add(new MyTask(dataField[0], dataField[1], dataField[2], dataField[3]));
+				if (!dataField[2].toUpperCase().equals("DUEDATE") && !dataField[3].toUpperCase().equals("STATUS")
+						&& !dataField[2].toUpperCase().equals("=======")
+						&& !dataField[3].toUpperCase().equals("======"))
+					outTaskList.add(new MyTask(dataField[0], dataField[1], dataField[2], dataField[3]));
 			}
 			datareader.close();
 		} catch (IOException e) {
@@ -97,40 +103,47 @@ public class TxtFileHandler {
 		}
 
 		if (keyParam > 0) {
-			headerWriter(1);
+			ArrayList<MyTask> outTaskListFatcher = new ArrayList<MyTask>();
+
 			for (MyTask rec : outTaskList) {
-				if (!rec.getInDueDate().toUpperCase().equals("DUEDATE")
-						&& !rec.getInStatus().toUpperCase().equals("STATUS")
-						&& !rec.getInDueDate().toUpperCase().equals("=======")
-						&& !rec.getInStatus().toUpperCase().equals("======")) {
-					switch (keyParam) {
-					case 1:
-						if (rec.getInProject().trim().toUpperCase().equals(conditionParam.trim().toUpperCase())) {
-							System.out.println(rec.getInTask() + colDel + rec.getInProject() + colDel
-									+ rec.getInDueDate() + colDel + rec.getInStatus());
-							readerCounter++;
-						}
-						break;
+				switch (keyParam) {
+				case 1:
 
-					case 2:
-						if (rec.getInDueDate().trim().toUpperCase().equals(conditionParam.trim().toUpperCase())) {
-							System.out.println(rec.getInTask() + colDel + rec.getInProject() + colDel
-									+ rec.getInDueDate() + colDel + rec.getInStatus());
-							readerCounter++;
-						}
-						break;
+					if (rec.getInProject().trim().toUpperCase().equals(conditionParam.trim().toUpperCase())) {
+						outTaskListFatcher.add(
+								new MyTask(rec.getInTask(), rec.getInProject(), rec.getInDueDate(), rec.getInStatus()));
 
-					case 3:
-						System.out.println(rec.getInTask() + colDel + rec.getInProject() + colDel + rec.getInDueDate()
-								+ colDel + rec.getInStatus());
-						readerCounter++;
-						break;
 					}
+					break;
+
+				case 2:
+
+					if (rec.getInDueDate().trim().toUpperCase().equals(conditionParam.trim().toUpperCase())) {
+						outTaskListFatcher.add(
+								new MyTask(rec.getInTask(), rec.getInProject(), rec.getInDueDate(), rec.getInStatus()));
+					}
+					break;
+
+				case 3:
+
+					outTaskListFatcher.add(
+							new MyTask(rec.getInTask(), rec.getInProject(), rec.getInDueDate(), rec.getInStatus()));
+
+					break;
 				}
 			}
+
+			outTaskList.clear();
+			outTaskList = (ArrayList<MyTask>) outTaskListFatcher.clone();
+
 			// Printing the count of retrieved lines
-			if (readerCounter > 0) {
-				System.out.println("\nCount of displayed Tasks = " + readerCounter + "\n");
+			if (outTaskList.size() > 0) {
+				headerWriter(1);
+				for (MyTask rec : outTaskList) {
+					System.out.println(rec.getInTask() + colDel + rec.getInProject() + colDel + rec.getInDueDate()
+							+ colDel + rec.getInStatus());
+				}
+				System.out.println("\nCount of displayed Tasks = " + outTaskList.size() + "\n");
 			} else {
 				System.out.println("\n No data found for identifier ( " + conditionParam + " )\n");
 			}
@@ -148,11 +161,19 @@ public class TxtFileHandler {
 	 */
 	static void dataUpdater(int keyParam, String taskName, String procName, String newData) {
 
+		File file = new File(fileName);
+
+		File tmpFile = new File(tmpFileName);
+
+		if (tmpFile.exists())
+			tmpFile.delete();
+
 		file.renameTo(tmpFile);
 
-		dataReader(0, null, tmpFilePath);
+		dataReader(0, null, tmpFileName);
+		headerWriter(2);
 
-		for (MyTask rec : outTaskList) {
+		for (MyTask rec : getOutTaskList()) {
 
 			if (rec.getInTask().trim().toUpperCase().equals(taskName.trim().toUpperCase())
 					&& rec.getInProject().trim().toUpperCase().equals(procName.trim().toUpperCase())) {
@@ -204,11 +225,16 @@ public class TxtFileHandler {
 	 */
 	static void dataDeleter(String taskName, String procName) {
 
+		File file = new File(fileName);
+
+		File tmpFile = new File(tmpFileName);
+
 		file.renameTo(tmpFile);
 
-		dataReader(0, null, tmpFilePath);
+		dataReader(0, null, tmpFileName);
 
-		for (MyTask rec : outTaskList) {
+		headerWriter(2);
+		for (MyTask rec : getOutTaskList()) {
 
 			if (rec.getInTask().trim().toUpperCase().equals(taskName.trim().toUpperCase())
 					&& rec.getInProject().trim().toUpperCase().equals(procName.trim().toUpperCase())) {
@@ -229,20 +255,22 @@ public class TxtFileHandler {
 	 *         matchs with keyValue (Done or Todo).
 	 */
 	public static int tasksStats(String keyValue) {
-		
+
+		File file = new File(fileName);
+
 		int taskCounter = 0;
 
 		if (!file.exists())
 			headerWriter(2);
 
-		dataReader(0, null, filePath);
+		dataReader(0, null, fileName);
 
-		for (MyTask rec : outTaskList) {
+		for (MyTask rec : getOutTaskList()) {
 			if (rec.getInStatus().trim().toUpperCase().equals(keyValue))
 				taskCounter++;
 		}
 
-		outTaskList.clear();
+		getOutTaskList().clear();
 
 		return taskCounter;
 	}
@@ -254,17 +282,25 @@ public class TxtFileHandler {
 	 *                 (keyParam = 2 ) Writing file header in the ToDoList file
 	 * 
 	 */
-	private static void headerWriter(int keyParam) {
+	static void headerWriter(int keyParam) {
 		switch (keyParam) {
 		case 1:
-			Messages.PRINTFILEHEADERS.printOut(2);//("<PrintFileHeaderForUsers/>");
+			Messages.PRINTFILEHEADERS.printOut(2);// ("<PrintFileHeaderForUsers/>");
 			break;
 
 		case 2:
-			dataWriter("Task", "Project", "DueDate", "Status");
-			dataWriter("====", "=======", "=======", "======");
+			dataWriter("Task", "Project", "DueDate  ", "Status");
+			dataWriter("====", "=======", "=======  ", "======");
 			break;
 		}
+	}
+
+	public static ArrayList<MyTask> getOutTaskList() {
+		return outTaskList;
+	}
+
+	public static void setOutTaskList(ArrayList<MyTask> outTaskList) {
+		TxtFileHandler.outTaskList = outTaskList;
 	}
 
 }
