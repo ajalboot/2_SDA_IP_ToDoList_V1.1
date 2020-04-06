@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 
 import AppMain.MyTask;
 
@@ -105,7 +107,9 @@ public class TxtFileHandler {
 		if (keyParam > 0) {
 			ArrayList<MyTask> outTaskListFatcher = new ArrayList<MyTask>();
 
-			for (MyTask rec : outTaskList) {
+			for (Iterator<MyTask> iterator = outTaskList.stream().sorted(Comparator.comparing(MyTask::getInDueDate))
+					.iterator(); iterator.hasNext();) {
+				MyTask rec = (MyTask) iterator.next();
 				switch (keyParam) {
 				case 1:
 

@@ -2,6 +2,8 @@
 package AppHandler;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
 import java.util.Scanner;
 
 import AppMain.MyMain;
@@ -334,10 +336,13 @@ public class UserInputHandler {
 
 	/**
 	 * Reading the tasks list from input array list and writing those tasks in
-	 * ToDoList file using the dataWriter method
+	 * ToDoList file using the dataWriter method by ordering Tasks according to Task
+	 * Due Date ascending
 	 */
 	static void addTasksToFile() {
-		for (MyTask dataRecord : inTaskList) {
+		for (Iterator<MyTask> iterator = inTaskList.stream().sorted(Comparator.comparing(MyTask::getInDueDate))
+				.iterator(); iterator.hasNext();) {
+			MyTask dataRecord = (MyTask) iterator.next();
 			TxtFileHandler.dataWriter(dataRecord.getInTask(), dataRecord.getInProject(), dataRecord.getInDueDate(),
 					dataRecord.getInStatus());
 		}
